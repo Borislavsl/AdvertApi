@@ -2,21 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AdvertApi.Models.BS;
+using Microsoft.Extensions.Configuration;
+using Amazon.Extensions.NETCore.Setup;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
 using AutoMapper;
+using AdvertApi.Models.BS;
 
 namespace AdvertApi.Services
 {
     public class DynamoDBAdvertStorage : IAdvertStorageService
     {
+        public IConfiguration Configuration { get; set; }
+
         private const string TABLE_NAME = "Adverts";
         private readonly IMapper _mapper;
 
         public DynamoDBAdvertStorage(IMapper mapper)
-        {
+        {            
             _mapper = mapper;
         }
 
@@ -28,7 +32,7 @@ namespace AdvertApi.Services
             dbModel.CreationDateTime = DateTime.UtcNow;
             dbModel.Status = AdvertStatus.Pending;
 
-            using (var client = new AmazonDynamoDBClient())
+            using (AmazonDynamoDBClient client = GetDynamoDBClient())
             {
                 DescribeTableResponse table = await client.DescribeTableAsync(TABLE_NAME);
 
@@ -41,10 +45,17 @@ namespace AdvertApi.Services
             return dbModel.Id;
         }
 
+        private AmazonDynamoDBClient GetDynamoDBClient()
+        {
+            AWSOptions options = Configuration.GetAWSOptions();
+
+            return new AmazonDynamoDBClient(options.Region);
+        }
+
         public async Task<bool> CheckHealthAsync()
         {
             Console.WriteLine("Health checking...");
-            using (var client = new AmazonDynamoDBClient())
+            using (AmazonDynamoDBClient client = GetDynamoDBClient())
             {
                 DescribeTableResponse tableData = await client.DescribeTableAsync(TABLE_NAME);
                 return string.Compare(tableData.Table.TableStatus, "active", true) == 0;
@@ -53,7 +64,7 @@ namespace AdvertApi.Services
 
         public async Task ConfirmAsync(ConfirmAdvertModel model)
         {
-            using (var client = new AmazonDynamoDBClient())
+            using (AmazonDynamoDBClient client = GetDynamoDBClient())
             {
                 using (var context = new DynamoDBContext(client))
                 {
@@ -77,7 +88,7 @@ namespace AdvertApi.Services
 
         public async Task<List<AdvertModel>> GetAllAsync()
         {
-            using (var client = new AmazonDynamoDBClient())
+            using (AmazonDynamoDBClient client = GetDynamoDBClient())
             {
                 using (var context = new DynamoDBContext(client))
                 {
@@ -89,7 +100,7 @@ namespace AdvertApi.Services
 
         public async Task<AdvertModel> GetByIdAsync(string id)
         {
-            using (var client = new AmazonDynamoDBClient())
+            using (AmazonDynamoDBClient client = GetDynamoDBClient())
             {
                 using (var context = new DynamoDBContext(client))
                 {

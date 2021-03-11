@@ -24,6 +24,7 @@ namespace AdvertApi.Controllers
         {
             _advertStorageService = advertStorageService;
             Configuration = configuration;
+            _advertStorageService.Configuration = configuration;
         }
 
         [HttpPost]

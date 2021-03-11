@@ -11,6 +11,7 @@ namespace AdvertApi
 {
     public class Startup
     {
+        private readonly string _allowSpecificOrigins = "AllOrigin";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -31,7 +32,7 @@ namespace AdvertApi
 
             services.AddCors(options =>
             {
-                options.AddPolicy("AllOrigin", policy => policy.WithOrigins("*").AllowAnyHeader());
+                options.AddPolicy(_allowSpecificOrigins, builder => builder.AllowAnyOrigin().AllowAnyHeader());
             });
 
             services.AddSwaggerGen(options =>
@@ -63,14 +64,18 @@ namespace AdvertApi
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web Advert Api"); });
 
+
             app.UseRouting();
 
+            app.UseCors(_allowSpecificOrigins);
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+
         }
     }
 }
