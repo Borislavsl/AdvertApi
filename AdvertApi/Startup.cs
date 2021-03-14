@@ -64,7 +64,6 @@ namespace AdvertApi
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web Advert Api"); });
 
-
             app.UseRouting();
 
             app.UseCors(_allowSpecificOrigins);
